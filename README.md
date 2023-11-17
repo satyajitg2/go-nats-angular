@@ -16,3 +16,10 @@ authorization {
         default_permissions = {}
 }
 
+Subscribe on Nats
+--------------------------------
+nats reply "hello.*" "NATS subscription for console on subject hello.*"
+
+Publish on Nats ws
+--------------------------------
+nats -s ws://localhost:8080 req 'hello.sue' 'This is hello from a websocket'
