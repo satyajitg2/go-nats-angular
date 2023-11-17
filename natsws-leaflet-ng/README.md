@@ -1,0 +1,1 @@
+frontend to consume go nats jetstream
