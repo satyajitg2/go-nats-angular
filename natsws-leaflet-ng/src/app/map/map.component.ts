@@ -16,6 +16,7 @@ export class MapComponent implements AfterViewInit {
 
   map: L.Map | undefined;
   conn: NatsConnection | any;
+  sub: any;
   
 
   constructor() {
@@ -24,25 +25,44 @@ export class MapComponent implements AfterViewInit {
   }
 
   natsSubscribe() {
-  
     //create a simple subscriber and iterate over messages
     //matching the 
     const sub = this.conn?.subscribe("hello.*");
+    this.sub = this.conn?.subscribe("hello.*");
+    const subjectStr = this.sub?.getSubject();
+    console.log(subjectStr);
 
 
-
+    //Send a message to hello.leaflet subject
+    this.conn?.publish("hello.leaflet", "Message from leaflet to leaflet");
   }
   async connectNats() {
+    const sc = StringCodec();
     this.conn = await connect(
       {
         servers: ["ws://localhost:8080", "wss://localhost:2229", "locahost:9111"],
       }
     );
+
+    this.printMessages();
     console.log("Connected to Nats using ",this.conn)
-    this.conn.publish("hello.sue", "Hello from Leaflet app.")
-    this.conn.publish("hello.SATYA", "Satya says hello.")
+    this.conn.publish("hello.sue", sc.encode("ANGULAR published from Leaflet app."));
+    this.conn.publish("hello.SATYA", sc.encode("Satya says hello."));
 
   }
+
+  async printMessages(){
+    const sc = StringCodec();
+
+    const s = this.conn?.subscribe("hello.*");
+
+    for await (const msg of s) {
+      console.log("Received message on Nats channel");
+      //s?.getProcessed(), 
+      console.log("Received  ----> ",sc.decode(msg.data));
+    }
+  }
+  
 
   ngAfterViewInit(): void {
     this.initMap();
