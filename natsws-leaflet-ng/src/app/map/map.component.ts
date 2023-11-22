@@ -78,7 +78,15 @@ export class MapComponent implements AfterViewInit {
     const longBounds = -80;
     const latBounds = -45;
 
+    //COMAMND to launch streaming
+    //nats -s ws://localhost:8080 req 'hello.lat' {{.Count}} --count 5000
+
+    //This nats cli streaming simulates latitude variation for the circle marker
+    //which updates on frontend like a moving circle
+    //TODO: Frontend is unable to keepup with streams and keeps moving the circle
+    //until entire stream is consumed
     const s = this.conn?.subscribe("hello.lat");
+
 
     for await (const msg of s) {
       var latVar = latBounds; //0-90
