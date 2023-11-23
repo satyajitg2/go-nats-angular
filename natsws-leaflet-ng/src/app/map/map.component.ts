@@ -2,6 +2,8 @@ import { AfterViewInit, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { NatsConnection, StringCodec, Subscription, connect } from 'nats.ws';
+import { Feature } from 'geojson';
+import { LineString } from 'geojson';
 
 //import markerIcon from "../../../node_modules/leaflet/dist/images/marker-icon.png";
 //import markerIcon from 'leaflet/dist/images/marker-icon.png'
@@ -22,9 +24,19 @@ export class MapComponent implements AfterViewInit {
   conn: NatsConnection | any;
   sub: any;
   circle: L.Circle<any> | undefined;
+  unitsGeoJson: L.GeoJSON;
   
 
   constructor() {
+    /*
+    
+    this.map = L.map('map', {
+      center: [8.16, 114.111],
+      zoom: 3
+    });
+    */
+
+    this.unitsGeoJson = L.geoJSON();
     const res = this.connectNats();
     this.natsSubscribe();
   }
@@ -60,15 +72,27 @@ export class MapComponent implements AfterViewInit {
   }
 
   async geoJsonMessage() {
+    const sc = StringCodec();
     const s = this.conn.subscribe("geojson.feature");
     for await(const msg of s) {
-      console.log("GEOJSON message received");
+      const geoJsonData = sc.decode(msg.data);
+      console.log("GEOJSON message received", geoJsonData);
       //TODO: Add a geojson feature to map
-      //L.geoJSON(msg)
+      //L.geoJSON(msg.data).addTo(this.map);
       //this.map?.hasLayer
-      this.map?.addLayer
-      
 
+      /*
+      const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        id: "tileLayerid",
+        maxZoom: 18,
+        minZoom: 3,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      });
+
+      L.geoJSON(msg.geoJsonData).addLayer(tiles);
+      
+      this.map?.addLayer(tiles);
+    */
     }
 
   }
@@ -129,6 +153,83 @@ export class MapComponent implements AfterViewInit {
     });
     tiles.addTo(this.map);
     this.map.setZoom(3);
+    var geojsonFeature: Feature = {
+      "type": "Feature",
+      "properties": {
+          "name": "Coors Field",
+          "amenity": "Baseball Stadium",
+          "popupContent": "This is where the Rockies play!"
+      },
+      "geometry": {
+          "type": "Point",
+          "coordinates": [40, 79]
+      }
+    };
+
+    L.geoJSON(geojsonFeature).addTo(this.map);
+
+    var myLines: LineString[] = [{
+      "type": "LineString",
+      "coordinates": [[-100, 40], [-105, 45], [-110, 55]]
+    }, {
+      "type": "LineString",
+      "coordinates": [[-105, 40], [-110, 45], [-115, 55]]
+    }];
+
+    var jsonFeature: Feature = {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            58.083601121350824,
+            39.94962115279381
+          ],
+          [
+            95.56436967478044,
+            38.587397505384104
+          ],
+          [
+            92.36254525602521,
+            4.778078695907112
+          ],
+          [
+            59.17773551409445,
+            6.152578285925088
+          ],
+          [
+            57.32726544465723,
+            39.45359018584065
+          ]
+        ],
+        "type": "LineString"
+      }
+    };
+
+    L.geoJSON(myLines).addTo(this.map);
+    L.geoJSON(jsonFeature).addTo(this.map);
+
+    //this.unitsGeoJson.addTo(this.map);
+
+    
+    var geoJsonI = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "coordinates": [
+              82.74460469085648,
+              22.34514051525167
+            ],
+            "type": "Point"
+          }
+        }
+      ]
+    };
+
+    
 
     //L.Icon.Default.imagePath='images/';
 /*
@@ -146,6 +247,7 @@ export class MapComponent implements AfterViewInit {
       fillOpacity: 0.5,
       radius: 500000
     }).addTo(this.map);
+
     this.circle.bindPopup("circle popup").openPopup();
   }
 }
