@@ -5,9 +5,6 @@ import { NatsConnection, StringCodec, Subscription, connect } from 'nats.ws';
 import { Feature } from 'geojson';
 import { LineString } from 'geojson';
 
-//import markerIcon from "../../../node_modules/leaflet/dist/images/marker-icon.png";
-//import markerIcon from 'leaflet/dist/images/marker-icon.png'
-
 
 @Component({
   selector: 'app-map',
@@ -28,14 +25,6 @@ export class MapComponent implements AfterViewInit {
   
 
   constructor() {
-    /*
-    
-    this.map = L.map('map', {
-      center: [8.16, 114.111],
-      zoom: 3
-    });
-    */
-
     this.unitsGeoJson = L.geoJSON();
     const res = this.connectNats();
     this.natsSubscribe();
@@ -44,11 +33,9 @@ export class MapComponent implements AfterViewInit {
   natsSubscribe() {
     //create a simple subscriber and iterate over messages
     //matching the 
-    const sub = this.conn?.subscribe("hello.*");
     this.sub = this.conn?.subscribe("hello.*");
     const subjectStr = this.sub?.getSubject();
     console.log(subjectStr);
-
 
     //Send a message to hello.leaflet subject
     this.conn?.publish("hello.leaflet", "Message from leaflet to leaflet");
@@ -64,10 +51,8 @@ export class MapComponent implements AfterViewInit {
     this.printMessages();
     this.geoJsonMessage();
     
-
     console.log("Connected to Nats using ",this.conn)
-    this.conn.publish("hello.sue", sc.encode("ANGULAR published from Leaflet app."));
-    this.conn.publish("hello.SATYA", sc.encode("Satya says hello."));
+    this.conn.publish("hello.nats_server", sc.encode("Nats ws UI says hello"));
 
   }
 
@@ -77,24 +62,7 @@ export class MapComponent implements AfterViewInit {
     for await(const msg of s) {
       const geoJsonData = sc.decode(msg.data);
       console.log("GEOJSON message received", geoJsonData);
-      //TODO: Add a geojson feature to map
-      //L.geoJSON(msg.data).addTo(this.map);
-      //this.map?.hasLayer
-
-      /*
-      const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        id: "tileLayerid",
-        maxZoom: 18,
-        minZoom: 3,
-        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      });
-
-      L.geoJSON(msg.geoJsonData).addLayer(tiles);
-      
-      this.map?.addLayer(tiles);
-    */
     }
-
   }
 
   async printMessages(){
@@ -110,7 +78,6 @@ export class MapComponent implements AfterViewInit {
     //TODO: Frontend is unable to keepup with streams and keeps moving the circle
     //until entire stream is consumed
     const s = this.conn?.subscribe("hello.lat");
-
 
     for await (const msg of s) {
       var latVar = latBounds; //0-90
@@ -153,6 +120,7 @@ export class MapComponent implements AfterViewInit {
     });
     tiles.addTo(this.map);
     this.map.setZoom(3);
+
     var geojsonFeature: Feature = {
       "type": "Feature",
       "properties": {
@@ -168,6 +136,7 @@ export class MapComponent implements AfterViewInit {
 
     L.geoJSON(geojsonFeature).addTo(this.map);
 
+    //Add Geojson Lines
     var myLines: LineString[] = [{
       "type": "LineString",
       "coordinates": [[-100, 40], [-105, 45], [-110, 55]]
@@ -175,6 +144,7 @@ export class MapComponent implements AfterViewInit {
       "type": "LineString",
       "coordinates": [[-105, 40], [-110, 45], [-115, 55]]
     }];
+
 
     var jsonFeature: Feature = {
       "type": "Feature",
@@ -209,9 +179,6 @@ export class MapComponent implements AfterViewInit {
     L.geoJSON(myLines).addTo(this.map);
     L.geoJSON(jsonFeature).addTo(this.map);
 
-    //this.unitsGeoJson.addTo(this.map);
-
-    
     var geoJsonI = {
       "type": "FeatureCollection",
       "features": [
@@ -229,18 +196,6 @@ export class MapComponent implements AfterViewInit {
       ]
     };
 
-    
-
-    //L.Icon.Default.imagePath='images/';
-/*
-    var marker = L.marker([23.24, 72.34], {icon: L.icon({
-      iconUrl: '',
-      iconSize: [80,80]
-
-    })}).addTo(this.map);
-
-    marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
-*/
     this.circle = L.circle([24.98, 77.76], {
       color: 'red',
       fillColor: '#f03',
