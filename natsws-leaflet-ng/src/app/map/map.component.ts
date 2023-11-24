@@ -5,6 +5,23 @@ import { NatsConnection, StringCodec, Subscription, connect } from 'nats.ws';
 import { Feature } from 'geojson';
 import { LineString } from 'geojson';
 
+//import imageIcon from '../../../node_modules/leaflet/dist/images/marker-icon.png';
+
+const planeIcon = L.icon({
+  //iconUrl: 'airplane.png',
+  //iconUrl: '../map/airplane.png',
+  iconUrl: './node_modules/leaflet/dist/images/marker-icon.png',
+  iconSize: [64, 64],
+  popupAnchor: [-3, -76],
+  shadowUrl: '',
+});
+
+const icon2 = L.icon({
+  iconSize: [25, 41],
+  iconAnchor: [13, 0],
+  iconUrl: '../../../node_modules/leaflet/dist/images/marker-icon.png',
+  shadowUrl: '../../../node_modules/leaflet/dist/images/marker-shadow.png'
+});
 
 @Component({
   selector: 'app-map',
@@ -17,12 +34,49 @@ import { LineString } from 'geojson';
 
 export class MapComponent implements AfterViewInit {
 
+  icon = {
+    icon: L.icon({
+      iconSize: [25, 41],
+      iconAnchor: [13, 0],
+      iconUrl: './node_modules/leaflet/dist/images/marker-icon.png',
+      shadowUrl: './node_modules/leaflet/dist/images/marker-shadow.png'
+    })
+  };
+
   map: L.Map | undefined;
   conn: NatsConnection | any;
   sub: any;
   circle: L.Circle<any> | undefined;
   unitsGeoJson: L.GeoJSON;
-  
+
+  marker: L.Marker<any> | undefined;
+  marker2: L.Marker<any> | undefined;
+
+  geojsonFeature: Feature = {
+    "type": "Feature",
+    "properties": {
+        "name": "Coors Field",
+        "amenity": "Baseball Stadium",
+        "popupContent": "This is where the Rockies play!"
+    },
+    "geometry": {
+        "type": "Point",
+        "coordinates": [120, 29]
+    }
+  };
+
+  geojsonFeature2: Feature = {
+    "type": "Feature",
+    "properties": {
+        "name": "Coors Field",
+        "amenity": "Baseball Stadium",
+        "popupContent": "This is where the Rockies play!"
+    },
+    "geometry": {
+        "type": "Point",
+        "coordinates": [140, 39]
+    }
+  };
 
   constructor() {
     this.unitsGeoJson = L.geoJSON();
@@ -48,7 +102,8 @@ export class MapComponent implements AfterViewInit {
       }
     );
 
-    this.printMessages();
+    this.traceFlight();
+    this.traceFlight2();
     this.geoJsonMessage();
     
     console.log("Connected to Nats using ",this.conn)
@@ -65,7 +120,7 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  async printMessages(){
+  async traceFlight(){
     const sc = StringCodec();
     const longBounds = -80;
     const latBounds = -45;
@@ -97,10 +152,46 @@ export class MapComponent implements AfterViewInit {
       console.log(latVar, lngVar);
       this.map?.setView(L.latLng(latVar, lngVar))
       
-      this.circle?.setLatLng(L.latLng(latVar, lngVar));
+      this.marker?.setLatLng(L.latLng(latVar, lngVar));
+
     }
   }
   
+  async traceFlight2(){
+    const sc = StringCodec();
+    const longBounds = -80;
+    const latBounds = -45;
+
+    //COMAMND to launch streaming
+    //nats -s ws://localhost:8080 req 'hello.lat' {{.Count}} --count 5000
+
+    //This nats cli streaming simulates latitude variation for the circle marker
+    //which updates on frontend like a moving circle
+    //TODO: Frontend is unable to keepup with streams and keeps moving the circle
+    //until entire stream is consumed
+    const s = this.conn?.subscribe("hello.a380");
+
+    for await (const msg of s) {
+      var latVar = latBounds; //0-90
+      var lngVar = longBounds; //0-180
+      
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/100);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/100);
+      console.log("msg.data", parseInt(sc.decode(msg.data)));
+
+      if(latVar > 80) {
+        latVar = latBounds;
+      }
+      if(lngVar > 99) {
+        lngVar = longBounds;
+      }
+
+      console.log(latVar, lngVar);
+      //this.map?.setView(L.latLng(latVar, lngVar))
+      
+      this.marker2?.setLatLng(L.latLng(latVar, lngVar));
+    }
+  }
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -121,6 +212,20 @@ export class MapComponent implements AfterViewInit {
     tiles.addTo(this.map);
     this.map.setZoom(3);
 
+    this.marker = L.marker(L.latLng(24, 79), {title: "AIR747", icon: planeIcon}).addTo(this.map);
+    this.marker2 = L.marker(L.latLng(0, 50), {title: "AIR380", icon: icon2}).addTo(this.map);
+
+    L.geoJSON(this.geojsonFeature).addTo(this.map);
+    L.geoJSON(this.geojsonFeature2).addTo(this.map);
+    
+
+  }
+}
+
+/*
+
+
+
     var geojsonFeature: Feature = {
       "type": "Feature",
       "properties": {
@@ -130,11 +235,37 @@ export class MapComponent implements AfterViewInit {
       },
       "geometry": {
           "type": "Point",
-          "coordinates": [40, 79]
+          "coordinates": [120, 29]
       }
     };
 
     L.geoJSON(geojsonFeature).addTo(this.map);
+
+
+    var geoJsonI = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "coordinates": [
+              82.74460469085648,
+              22.34514051525167
+            ],
+            "type": "Point"
+          }
+        }
+      ]
+    };
+    this.circle = L.circle([24.98, 77.76], {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.5,
+      radius: 500000
+    }).addTo(this.map);
+
+    this.circle.bindPopup("circle popup").openPopup();
 
     //Add Geojson Lines
     var myLines: LineString[] = [{
@@ -144,6 +275,8 @@ export class MapComponent implements AfterViewInit {
       "type": "LineString",
       "coordinates": [[-105, 40], [-110, 45], [-115, 55]]
     }];
+
+    L.geoJSON(myLines).addTo(this.map);
 
 
     var jsonFeature: Feature = {
@@ -175,34 +308,6 @@ export class MapComponent implements AfterViewInit {
         "type": "LineString"
       }
     };
-
-    L.geoJSON(myLines).addTo(this.map);
     L.geoJSON(jsonFeature).addTo(this.map);
-
-    var geoJsonI = {
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "coordinates": [
-              82.74460469085648,
-              22.34514051525167
-            ],
-            "type": "Point"
-          }
-        }
-      ]
-    };
-
-    this.circle = L.circle([24.98, 77.76], {
-      color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.5,
-      radius: 500000
-    }).addTo(this.map);
-
-    this.circle.bindPopup("circle popup").openPopup();
-  }
-}
+    
+ */
