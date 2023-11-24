@@ -28,7 +28,7 @@ export class MapComponent implements AfterViewInit {
     iconUrl: this.imageUrl,
     iconSize: [64, 64],
     popupAnchor: [-3, -76],
-    shadowUrl: '',
+    shadowUrl: ''
   });
   
 
@@ -172,8 +172,11 @@ export class MapComponent implements AfterViewInit {
         lngVar = longBounds;
       }
 
-      console.log(latVar, lngVar);
+      //console.log(latVar, lngVar);
       this.marker2?.setLatLng(L.latLng(latVar, lngVar));
+      //TODO: set direction to marker
+      //TODO: set last known lat lng
+      
     }
   }
 
@@ -206,7 +209,8 @@ export class MapComponent implements AfterViewInit {
     this.marker2 = L.marker(L.latLng(0, 50), 
       {
         title: "AIR380", 
-        icon: this.planeIcon
+        icon: this.planeIcon,
+        autoPan: true
       }
     ).addTo(this.map).bindPopup('AIR380');
 
@@ -220,9 +224,6 @@ export class MapComponent implements AfterViewInit {
 }
 
 /*
-
-
-
     var geojsonFeature: Feature = {
       "type": "Feature",
       "properties": {
