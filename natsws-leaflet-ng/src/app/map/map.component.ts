@@ -5,24 +5,6 @@ import { NatsConnection, StringCodec, Subscription, connect } from 'nats.ws';
 import { Feature } from 'geojson';
 import { LineString } from 'geojson';
 
-//import imageIcon from '../../../node_modules/leaflet/dist/images/marker-icon.png';
-
-const planeIcon = L.icon({
-  //iconUrl: 'airplane.png',
-  //iconUrl: '../map/airplane.png',
-  iconUrl: './node_modules/leaflet/dist/images/marker-icon.png',
-  iconSize: [64, 64],
-  popupAnchor: [-3, -76],
-  shadowUrl: '',
-});
-
-const icon2 = L.icon({
-  iconSize: [25, 41],
-  iconAnchor: [13, 0],
-  iconUrl: '../../../node_modules/leaflet/dist/images/marker-icon.png',
-  shadowUrl: '../../../node_modules/leaflet/dist/images/marker-shadow.png'
-});
-
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -31,9 +13,8 @@ const icon2 = L.icon({
   styleUrl: './map.component.css'
 })
 
-
 export class MapComponent implements AfterViewInit {
-
+  imageUrl = 'assets/images/airplane.png';
   icon = {
     icon: L.icon({
       iconSize: [25, 41],
@@ -42,6 +23,14 @@ export class MapComponent implements AfterViewInit {
       shadowUrl: './node_modules/leaflet/dist/images/marker-shadow.png'
     })
   };
+
+   planeIcon = L.icon({
+    iconUrl: this.imageUrl,
+    iconSize: [64, 64],
+    popupAnchor: [-3, -76],
+    shadowUrl: '',
+  });
+  
 
   map: L.Map | undefined;
   conn: NatsConnection | any;
@@ -163,12 +152,9 @@ export class MapComponent implements AfterViewInit {
     const latBounds = -45;
 
     //COMAMND to launch streaming
-    //nats -s ws://localhost:8080 req 'hello.lat' {{.Count}} --count 5000
+    //nats -s ws://localhost:8080 req 'hello.a380' {{.Count}} --count 10000
+    //Setview is not called on this marker
 
-    //This nats cli streaming simulates latitude variation for the circle marker
-    //which updates on frontend like a moving circle
-    //TODO: Frontend is unable to keepup with streams and keeps moving the circle
-    //until entire stream is consumed
     const s = this.conn?.subscribe("hello.a380");
 
     for await (const msg of s) {
@@ -187,8 +173,6 @@ export class MapComponent implements AfterViewInit {
       }
 
       console.log(latVar, lngVar);
-      //this.map?.setView(L.latLng(latVar, lngVar))
-      
       this.marker2?.setLatLng(L.latLng(latVar, lngVar));
     }
   }
@@ -212,8 +196,21 @@ export class MapComponent implements AfterViewInit {
     tiles.addTo(this.map);
     this.map.setZoom(3);
 
-    this.marker = L.marker(L.latLng(24, 79), {title: "AIR747", icon: planeIcon}).addTo(this.map);
-    this.marker2 = L.marker(L.latLng(0, 50), {title: "AIR380", icon: icon2}).addTo(this.map);
+    this.marker = L.marker(L.latLng(24, 79), 
+      {
+        title: "AIR747", 
+        icon: this.planeIcon
+      }
+    ).addTo(this.map).bindPopup('AIR747');
+
+    this.marker2 = L.marker(L.latLng(0, 50), 
+      {
+        title: "AIR380", 
+        icon: this.planeIcon
+      }
+    ).addTo(this.map).bindPopup('AIR380');
+
+    //this.marker2 = L.marker(L.latLng(0, 50), {title: "AIR380", icon: this.planeIcon}).addTo(this.map);
 
     L.geoJSON(this.geojsonFeature).addTo(this.map);
     L.geoJSON(this.geojsonFeature2).addTo(this.map);
