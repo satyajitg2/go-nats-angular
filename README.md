@@ -16,10 +16,13 @@ authorization {
         default_permissions = {}
 }
 
-Subscribe on Nats
+Run Maps app
 --------------------------------
-nats reply "hello.*" "NATS subscription for console on subject hello.*"
+cd natsws-leaflet-ng
+git checkout leaflet_features
+ng serve
 
-Publish on Nats ws
+Publish on Nats ws to Aircraft 
 --------------------------------
-nats -s ws://localhost:8080 req 'hello.sue' 'This is hello from a websocket'
+nats -s ws://localhost:8080 pub 'hello.a380' {{.Count}} --count 100000
+
