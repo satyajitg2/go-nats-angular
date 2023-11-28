@@ -19,7 +19,9 @@ authorization {
 Run Maps app
 --------------------------------
 cd natsws-leaflet-ng
+
 git checkout leaflet_features
+
 ng serve
 
 Publish on Nats ws to Aircraft 
