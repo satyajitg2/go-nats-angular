@@ -4,6 +4,7 @@ import * as L from 'leaflet';
 import { NatsConnection, StringCodec, Subscription, connect } from 'nats.ws';
 import { Feature } from 'geojson';
 import { LineString } from 'geojson';
+import { AircraftSignal } from '../AircraftSignal';
 
 @Component({
   selector: 'app-map',
@@ -12,6 +13,7 @@ import { LineString } from 'geojson';
   templateUrl: './map.component.html',
   styleUrl: './map.component.css'
 })
+
 
 export class MapComponent implements AfterViewInit {
   imageUrl = 'assets/images/airplane.png';
@@ -31,7 +33,9 @@ export class MapComponent implements AfterViewInit {
     shadowUrl: ''
   });
   
+  
 
+  aircraft: AircraftSignal | undefined;
   map: L.Map | undefined;
   conn: NatsConnection | any;
   sub: any;
@@ -93,11 +97,44 @@ export class MapComponent implements AfterViewInit {
 
     this.traceFlight();
     this.traceFlight2();
+    this.traceAircraft();
+    
     this.geoJsonMessage();
     
     console.log("Connected to Nats using ",this.conn)
     this.conn.publish("hello.nats_server", sc.encode("Nats ws UI says hello"));
 
+  }
+
+  async traceAircraft() {
+  
+    const sc = StringCodec();
+    const latBounds = -45;
+    const longBounds = -80;
+
+    const s = this.conn?.subscribe("hello.aircraft");
+
+    for await (const msg of s) {
+      var latVar = latBounds; //0-90
+      var lngVar = longBounds; //0-180
+      
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/1000);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/1000);
+      
+      console.log("updating position ",latVar, lngVar)
+
+      if(latVar > 80) {
+        latVar = latBounds;
+      }
+      if(lngVar > 99) {
+        lngVar = longBounds;
+      }
+      this.aircraft?.updatePosition(L.latLng(latVar, lngVar));
+
+
+    }
+    //const aircraft = new AircraftSignal();
+  
   }
 
   async geoJsonMessage() {
@@ -127,9 +164,8 @@ export class MapComponent implements AfterViewInit {
       var latVar = latBounds; //0-90
       var lngVar = longBounds; //0-180
       
-      latVar = latVar+ (parseInt(sc.decode(msg.data))/100);
-      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/100);
-      console.log("msg.data", parseInt(sc.decode(msg.data)));
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/1000);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/1000);
 
       if(latVar > 80) {
         latVar = latBounds;
@@ -138,7 +174,6 @@ export class MapComponent implements AfterViewInit {
         lngVar = longBounds;
       }
 
-      console.log(latVar, lngVar);
       this.map?.setView(L.latLng(latVar, lngVar))
       
       this.marker?.setLatLng(L.latLng(latVar, lngVar));
@@ -161,9 +196,9 @@ export class MapComponent implements AfterViewInit {
       var latVar = latBounds; //0-90
       var lngVar = longBounds; //0-180
       
-      latVar = latVar+ (parseInt(sc.decode(msg.data))/100);
-      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/100);
-      console.log("msg.data", parseInt(sc.decode(msg.data)));
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/1000);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/1000);
+      //console.log("msg.data", parseInt(sc.decode(msg.data)));
 
       if(latVar > 80) {
         latVar = latBounds;
@@ -199,12 +234,14 @@ export class MapComponent implements AfterViewInit {
     tiles.addTo(this.map);
     this.map.setZoom(3);
 
+    
     this.marker = L.marker(L.latLng(24, 79), 
       {
         title: "AIR747", 
         icon: this.planeIcon
       }
     ).addTo(this.map).bindPopup('AIR747');
+    
 
     this.marker2 = L.marker(L.latLng(0, 50), 
       {
@@ -214,12 +251,10 @@ export class MapComponent implements AfterViewInit {
       }
     ).addTo(this.map).bindPopup('AIR380');
 
-    //this.marker2 = L.marker(L.latLng(0, 50), {title: "AIR380", icon: this.planeIcon}).addTo(this.map);
-
     L.geoJSON(this.geojsonFeature).addTo(this.map);
     L.geoJSON(this.geojsonFeature2).addTo(this.map);
-    
 
+    this.aircraft = new AircraftSignal("AIR9209", 20, L.latLng(4, 89),  this.map);
   }
 }
 
