@@ -34,7 +34,7 @@ export class MapComponent implements AfterViewInit {
   });
   
   
-
+  //TODO: use rotated marker along with direction
   aircraft: AircraftSignal | undefined;
   map: L.Map | undefined;
   conn: NatsConnection | any;
@@ -109,6 +109,8 @@ export class MapComponent implements AfterViewInit {
   async traceAircraft() {
   
     const sc = StringCodec();
+    //TODO: Remove these when nats streaming server publishes
+    //      actual signals in geojson or other format
     const latBounds = -45;
     const longBounds = -80;
 
@@ -123,6 +125,7 @@ export class MapComponent implements AfterViewInit {
       
       console.log("updating position ",latVar, lngVar)
 
+      
       if(latVar > 80) {
         latVar = latBounds;
       }
@@ -130,11 +133,7 @@ export class MapComponent implements AfterViewInit {
         lngVar = longBounds;
       }
       this.aircraft?.updatePosition(L.latLng(latVar, lngVar));
-
-
     }
-    //const aircraft = new AircraftSignal();
-  
   }
 
   async geoJsonMessage() {
@@ -148,6 +147,8 @@ export class MapComponent implements AfterViewInit {
 
   async traceFlight(){
     const sc = StringCodec();
+    //TODO: Remove these when nats streaming server publishes
+    //      actual signals in geojson or other format
     const longBounds = -80;
     const latBounds = -45;
 
@@ -183,6 +184,8 @@ export class MapComponent implements AfterViewInit {
   
   async traceFlight2(){
     const sc = StringCodec();
+    //TODO: Remove these when nats streaming server publishes
+    //      actual signals in geojson or other format
     const longBounds = -80;
     const latBounds = -45;
 
