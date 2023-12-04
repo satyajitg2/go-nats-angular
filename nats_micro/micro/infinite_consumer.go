@@ -15,18 +15,43 @@ import (
 	"github.com/rsocket/rsocket-go/payload"
 )
 
-func consume_routine(cons jetstream.Consumer) {
+func streamPublish(ctx context.Context, nc *nats.Conn, js jetstream.JetStream, ch chan string) {
+
+	for s := range ch {
+		if nc.Status() != nats.CONNECTED {
+			continue
+		}
+		//fmt.Println("Received on streamPublish", s)
+		//TODO: Investigate it publishes 1 message sometimes and errors out.
+		//_, err := js.Publish(ctx, "hello.lat", []byte(s))
+		//_, err := js.PublishAsync("hello.lat", []byte(s))
+
+		//NC PUBLISH works best without any flaws
+		nc.Publish("hello.lat", []byte(s))
+
+		/*
+			if err != nil {
+				//Do nothing now
+				fmt.Println("Error on Publish", err)
+			}*/
+	}
+}
+
+func consume_routine(cons jetstream.Consumer, ch chan string) {
 	i := 0
 	j := 1
 	fmt.Println("Started consuming")
 	start := time.Now()
 	wg := sync.WaitGroup{}
 
+	// Consumer using nats pub adsb.TejasMK1 "{jet: Tejas MK1A, Bearing: {{.Count}}}" --count 500000
 	wg.Add(1)
 	cons.Consume(func(msg jetstream.Msg) {
 		msg.Ack()
 		/*1 Millionth in time -> 48.119924156s with this print*/
-		//data := string(msg.Data())
+		data := string(msg.Data())
+		ch <- data
+
 		//fmt.Println("Received msg on ", msg.Subject(), data)
 		i++
 		//wg.Done()
@@ -85,7 +110,7 @@ func infiniteStream() {
 
 	js, _ := jetstream.New(nc)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
 	streamName := "ADSB"
@@ -96,6 +121,10 @@ func infiniteStream() {
 
 	cons, _ := infiniteStream.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{})
 
+	//Channel consumer -->> publisher
+	ch := make(chan string)
+	go streamPublish(ctx, nc, js, ch)
+
 	fmt.Println("Prepare to Consume")
 	/*
 		wg := sync.WaitGroup{}
@@ -103,7 +132,7 @@ func infiniteStream() {
 	*/
 	fmt.Println("Start Consume")
 
-	consume_routine(cons)
+	consume_routine(cons, ch)
 
 	fmt.Println("Complete consume")
 	//wg.Wait()
