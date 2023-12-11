@@ -1,30 +1,32 @@
 # go-nats-angular
 leaftlet and nats jetstream
 
-Start nats server 
-satyajit@satyajit-ThinkPad-T420:~$ nats-server -c  /home/satyajit/Code/nats_conf/server.conf
 
-server.conf
-----------------------------
-listen: 127.0.0.1:4222
-jetstream: enabled
-websocket: {
-        port: 8080
-        no_tls: true
-}
-authorization {
-        default_permissions = {}
-}
-
-Run Maps app
+1.Start nats server 
 --------------------------------
-cd natsws-leaflet-ng
+$satyajit@satyajit-ThinkPad-T420:~$ nats-server -c  go-nats-angular/nats-server.conf
 
-git checkout leaflet_features
-
-ng serve
-
-Publish on Nats ws to Aircraft 
+2. Build and start angular app
 --------------------------------
-nats -s ws://localhost:8080 pub 'hello.a380' {{.Count}} --count 100000
+#cd natsws-leaflet-ng
+
+$git checkout leaflet_features
+
+#ng serve
+
+3. Open Web App
+-------------------------------
+localhost:4200
+
+4. Publish streaming data using nats CLI
+--------------------------------
+$nats -s ws://localhost:8080 pub 'hello.a380' {{.Count}} --count 100000  
+
+
+5. Start Go streaming app
+---------------------------
+$cd nats_micro/micro
+$go run .
+
+$ nats pub adsb.anything {{.Count}} --count 1000000  --Publish on any nats subject eg. adsb.F1, adsb.anything, its re-routed to hello.aircraft
 
