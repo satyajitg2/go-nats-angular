@@ -1,6 +1,6 @@
 # go-nats-angular
-leaftlet and nats jetstream
-
+This project is a demo poc for data streaming using nats jetstream with a golang microservice to an angular web app.
+Checkout branch "leaflet_features" and follow steps below.
 
 1.Start nats server 
 --------------------------------
