@@ -30,3 +30,5 @@ $go run .
 
 $nats pub adsb.anything {{.Count}} --count 1000000  --Publish on any nats subject eg. adsb.F1, adsb.anything, its re-routed to hello.aircraft
 
+
+A sneak peak clip of demo video is available on https://drive.google.com/file/d/1PJx8ynrW6Zd3EgIas3YL3n4xRfqFY3Yp/view?usp=sharing
