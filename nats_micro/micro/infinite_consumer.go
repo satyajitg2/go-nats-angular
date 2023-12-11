@@ -1,3 +1,10 @@
+/*
+ * This program starts a go routine to create a stream adsb.*.
+ * Any payload incoming to this stream is consumsed as it arrives.
+ * It is then forwarded to a different subject to be consumed at end point.
+ * @author  Satyajit Singh
+ */
+
 package main
 
 import (

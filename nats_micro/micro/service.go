@@ -1,3 +1,10 @@
+/*
+ * This program starts a Go Microservice. It registers a few sample services for
+ * example usage of a Request-Response in this project.
+ * Streaming is done using go routine infiniteStream.
+ * @author  Satyajit Singh
+ */
+
 package main
 
 import (
@@ -55,22 +62,6 @@ func main() {
 
 	//TODO: Setup infinite consumer right away.
 	go infiniteStream()
-
-	/*
-		streamHandle := func(req micro.Request) {
-			infiniteStream()
-		}
-
-		micro.AddService(nc, micro.Config{
-			Name:    "InfiniteStreamService",
-			Version: "1.0.0",
-			//base handler
-			Endpoint: &micro.EndpointConfig{
-				Subject: "orders.*",
-				Handler: micro.HandlerFunc(streamHandle),
-			},
-		})
-	*/
 	fmt.Println(srv, err)
 
 	runtime.Goexit()
