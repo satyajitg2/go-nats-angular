@@ -33,7 +33,9 @@ export class MapComponent implements AfterViewInit {
     shadowUrl: ''
   });
   
-  
+  tFlngBnd = -80;
+  tFlatBnd = -45;
+    
   //TODO: use rotated marker along with direction
   aircraft: AircraftSignal | undefined;
   map: L.Map | undefined;
@@ -120,8 +122,8 @@ export class MapComponent implements AfterViewInit {
       var latVar = latBounds; //0-90
       var lngVar = longBounds; //0-180
       
-      latVar = latVar+ (parseInt(sc.decode(msg.data))/1000);
-      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/1000);
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/5000);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/5000);
       
       console.log("updating position ",latVar, lngVar)
 
@@ -149,30 +151,28 @@ export class MapComponent implements AfterViewInit {
     const sc = StringCodec();
     //TODO: Remove these when nats streaming server publishes
     //      actual signals in geojson or other format
-    const longBounds = -80;
-    const latBounds = -45;
-
+    
     //COMAMND to launch streaming
-    //nats -s ws://localhost:8080 req 'hello.lat' {{.Count}} --count 5000
+    //nats -s ws://localhost:8080 req 'hello.F22' {{.Count}} --count 5000
 
     //This nats cli streaming simulates latitude variation for the circle marker
     //which updates on frontend like a moving circle
     //TODO: Frontend is unable to keepup with streams and keeps moving the circle
     //until entire stream is consumed
-    const s = this.conn?.subscribe("hello.lat");
+    const s = this.conn?.subscribe("hello.F22");
 
     for await (const msg of s) {
-      var latVar = latBounds; //0-90
-      var lngVar = longBounds; //0-180
+      var latVar = this.tFlatBnd; //0-90
+      var lngVar = this.tFlngBnd; //0-180
       
-      latVar = latVar+ (parseInt(sc.decode(msg.data))/1000);
-      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/1000);
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/5000);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/5000);
 
       if(latVar > 80) {
-        latVar = latBounds;
+        latVar = this.tFlatBnd;
       }
       if(lngVar > 99) {
-        lngVar = longBounds;
+        lngVar = this.tFlngBnd;
       }
 
       this.map?.setView(L.latLng(latVar, lngVar))
@@ -199,8 +199,8 @@ export class MapComponent implements AfterViewInit {
       var latVar = latBounds; //0-90
       var lngVar = longBounds; //0-180
       
-      latVar = latVar+ (parseInt(sc.decode(msg.data))/1000);
-      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/1000);
+      latVar = latVar+ (parseInt(sc.decode(msg.data))/5000);
+      lngVar = lngVar+ (parseInt(sc.decode(msg.data))/5000);
       //console.log("msg.data", parseInt(sc.decode(msg.data)));
 
       if(latVar > 80) {
