@@ -1,6 +1,8 @@
 # go-nats-angular
 This project is a demo poc for data streaming using nats jetstream with a golang microservice to an angular web app.
+Before proceeding install nats server and nats cli tools along with go, node.js to build and run the streaming and web app.
 Checkout branch "leaflet_features" and follow steps below.
+
 
 1.Start nats server 
 --------------------------------
