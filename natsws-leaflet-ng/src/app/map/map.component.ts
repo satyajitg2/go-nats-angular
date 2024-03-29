@@ -226,6 +226,12 @@ export class MapComponent implements AfterViewInit {
     this.initMap();
   }
 
+  onMapClick(e: any) {
+    alert("You clicked the map at "+e.latlng);
+  }
+
+
+
   private initMap(): void{
     this.map = L.map('map', {
       center: [8.16, 114.111],
@@ -240,6 +246,7 @@ export class MapComponent implements AfterViewInit {
     });
     tiles.addTo(this.map);
     this.map.setZoom(3);
+    this.map.on('click', this.onMapClick);
 
     
     this.marker = L.marker(L.latLng(24, 79), 
@@ -248,6 +255,7 @@ export class MapComponent implements AfterViewInit {
         icon: this.planeIcon
       }
     ).addTo(this.map).bindPopup('AIR747');
+
     
 
     this.marker2 = L.marker(L.latLng(0, 50), 
