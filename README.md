@@ -1,25 +1,36 @@
 # go-nats-angular
-leaftlet and nats jetstream
+This project is a demo poc for data streaming using nats jetstream with a golang microservice to an angular web app.
+Before proceeding install nats server and nats cli tools along with go, node.js to build and run the streaming and web app.
+Checkout branch "leaflet_features" and follow steps below.
 
-Start nats server 
-satyajit@satyajit-ThinkPad-T420:~$ nats-server -c  /home/satyajit/Code/nats_conf/server.conf
 
-server.conf
-----------------------------
-listen: 127.0.0.1:4222
-jetstream: enabled
-websocket: {
-        port: 8080
-        no_tls: true
-}
-authorization {
-        default_permissions = {}
-}
-
-Subscribe on Nats
+1.Start nats server 
 --------------------------------
-nats reply "hello.*" "NATS subscription for console on subject hello.*"
+$nats-server -c  go-nats-angular/nats-server.conf
 
-Publish on Nats ws
+2. Build and start angular app
 --------------------------------
-nats -s ws://localhost:8080 req 'hello.sue' 'This is hello from a websocket'
+$cd natsws-leaflet-ng
+
+$git checkout leaflet_features
+
+$ng serve
+
+3. Open Web App
+-------------------------------
+localhost:4200
+
+4. Publish streaming data using nats CLI
+--------------------------------
+$nats -s ws://localhost:8080 pub 'hello.a380' {{.Count}} --count 100000  
+
+
+5. Start Go streaming app
+---------------------------
+$cd nats_micro/micro
+$go run .
+
+$nats pub adsb.anything {{.Count}} --count 1000000  --Publish on any nats subject eg. adsb.F1, adsb.anything, its re-routed to hello.aircraft
+
+
+A sneak peak clip of demo video is available on https://drive.google.com/file/d/1PJx8ynrW6Zd3EgIas3YL3n4xRfqFY3Yp/view?usp=sharing
