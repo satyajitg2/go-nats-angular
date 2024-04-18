@@ -62,18 +62,20 @@ func setup_rsocket(cli rsocket.Client) {
 // nats pub orders.us "Hi orders.us arriving" --count 10000
 func infiniteStream() {
 	fmt.Println("Hello World infinite consumer")
+	/*
+		//TODO: run this when Rsocket backend is RUNNING
+			cli, err := rsocket.Connect().
+				SetupPayload(payload.NewString("golang:service", "Hello World from Golang")).
+				//SetupPayload(payload.NewString("Hello", "World")).
+				Transport(rsocket.TCPClient().SetHostAndPort("127.0.0.1", 6565).Build()).
+				Start(context.Background())
+			if err != nil {
+				panic(err)
+			}
+			defer cli.Close()
 
-	cli, err := rsocket.Connect().
-		SetupPayload(payload.NewString("golang:service", "Hello World from Golang")).
-		//SetupPayload(payload.NewString("Hello", "World")).
-		Transport(rsocket.TCPClient().SetHostAndPort("127.0.0.1", 6565).Build()).
-		Start(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	defer cli.Close()
-
-	setup_rsocket(cli)
+			setup_rsocket(cli)
+	*/
 
 	url := os.Getenv("NATS_URL")
 	if url == "" {
